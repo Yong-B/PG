@@ -32,6 +32,12 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	// DB
+	runtimeOnly("org.postgresql:postgresql")
+
+	// flyway
+	implementation("org.flywaydb:flyway-core:9.22.3")
 }
 
 tasks.withType<Test> {
