@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DEMO_POSTGRESQL_URL:jdbc:postgresql://localhost:5433/demo}
+    username: ${DEMO_POSTGRESQL_USERNAME:root}
+    password: ${DEMO_POSTGRESQL_PASSWORD:root}
+
+    # connection pool (usage: hikari pool)
+    hikari:
+      connection-timeout: 30000  # 30?
+      idle-timeout: 600000      # 10?
+      max-lifetime: 1800000     # 30?
+      maximum-pool-size: 10     # 300? ?? ???. ???? ? ??????? ?? 10-20 ??? ??
+      minimum-idle: 5
+      leak-detection-threshold: 30000  # 30?? ??
+      auto-commit: true
+      connection-test-query: SELECT 1
+
+  jpa:
+    properties:
+      hibernate:
+        format-sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 100
+    show-sql: true # profile ?? ? ?? ??? ? ??? ??? true ?.
+    hibernate:
+      ddl-auto: none # flyway ???? none ?? validate (??? ?? validate)
+
+  flyway:
+    baseline-on-migrate: true # flyway schema history ???? ??? ????.
+    locations:
+      - classpath:db/migration/v1_0
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+  
