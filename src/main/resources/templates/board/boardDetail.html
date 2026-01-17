@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title} + ' - Wanderin\' Free'">상세보기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        /* 배경색을 연한 회색으로 변경 */
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; overflow-x: hidden; }
+        
+        /* 메뉴 하단 애니메이션 바 */
+        .menu-underline {
+            position: absolute;
+            bottom: -32px;
+            left: 0;
+            width: 0;
+            height: 4px;
+            background-color: #0056ff;
+            transition: all 0.3s ease;
+        }
+        .group:hover .menu-underline {
+            width: 100%;
+        }
+        .content-area { line-height: 1.8; min-height: 400px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<header class="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50 shadow-sm">
+    <div class="w-full px-12 h-24 flex items-center justify-between">
+        <div class="flex-none">
+            <a th:href="@{/}" class="text-3xl font-[900] tracking-tighter text-black hover:text-blue-600 transition-colors whitespace-nowrap">
+                WANDERIN' FREE
+            </a>
+        </div>
+
+        <nav class="absolute left-1/2 -translate-x-1/2">
+            <ul class="flex space-x-24 font-bold text-xl text-gray-800">
+                <li class="relative group">
+                    <a href="#" class="hover:text-blue-600 transition-colors">소식</a>
+                    <span class="menu-underline"></span>
+                </li>
+                <li class="relative group">
+                    <a href="#" class="hover:text-blue-600 transition-colors">정보</a>
+                    <span class="menu-underline"></span>
+                </li>
+                <li class="relative group">
+                    <a th:href="@{/board}" class="text-blue-600 transition-colors">게시판</a>
+                    <span class="menu-underline" style="width: 100%;"></span>
+                </li>
+                <li class="relative group">
+                    <a href="#" class="hover:text-blue-600 transition-colors">고객지원</a>
+                    <span class="menu-underline"></span>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="flex-none flex items-center space-x-8 text-base font-bold text-gray-600">
+            <th:block th:if="${session.loginMember == null}">
+                <a th:href="@{/member/add}" class="hover:text-black transition-colors whitespace-nowrap">회원가입</a>
+                <a th:href="@{/login}" class="border-2 border-gray-900 px-7 py-2 rounded-full text-black hover:bg-gray-900 hover:text-white transition-all shadow-sm whitespace-nowrap">
+                    로그인
+                </a>
+            </th:block>
+
+            <th:block th:if="${session.loginMember != null}">
+                <div class="flex items-center space-x-4">
+                    <span class="text-black font-black">
+                        <span class="text-blue-600" th:text="${session.loginMember.name}">사용자</span>님 환영합니다
+                    </span>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="border-2 border-gray-200 px-6 py-2 rounded-full text-gray-500 hover:border-red-500 hover:text-red-500 transition-all whitespace-nowrap">
+                            로그아웃
+                        </button>
+                    </form>
+                </div>
+            </th:block>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1000px] mx-auto py-16 px-12 my-12 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
+    <form id="updateForm" th:action="@{/board/{id}/edit(id=${post.id})}" method="post">
+
+        <div class="bg-[#fcfcfc] -mx-12 -mt-16 px-12 py-16 rounded-t-[2.5rem] border-b border-gray-100 mb-12">
+            <h2 id="viewTitle" class="text-4xl font-black text-gray-900 leading-tight mb-8" th:text="${post.title}">제목</h2>
+
+            <input type="text" id="editTitle" name="title" th:value="${post.title}"
+                   class="hidden w-full text-4xl font-black text-gray-900 border-b-4 border-blue-500 focus:outline-none mb-8 bg-white px-4 py-2 rounded-xl shadow-sm">
+
+            <div class="flex items-center justify-between text-gray-500 font-medium">
+                <div class="flex items-center space-x-6">
+                    <span class="text-black font-[800] text-lg" th:text="${post.authorName}">작성자</span>
+                    <span class="w-px h-4 bg-gray-300"></span>
+                    <span class="text-gray-400" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                </div>
+                <div class="bg-blue-50 text-blue-600 px-5 py-2 rounded-full font-bold text-sm border border-blue-100">
+                    조회수 <span th:text="${post.viewCount}">13</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-area mb-20 px-2">
+            <div id="viewContent" class="text-xl text-gray-800 whitespace-pre-wrap leading-relaxed min-h-[400px]" th:text="${post.content}">내용</div>
+
+            <textarea id="editContent" name="content" rows="15"
+                      class="hidden w-full text-xl text-gray-800 border-2 border-blue-100 rounded-[2rem] p-10 focus:outline-none focus:border-blue-500 bg-[#f9fbff] whitespace-pre-wrap shadow-inner"
+                      th:text="${post.content}"></textarea>
+        </div>
+    </form>
+
+    <div class="flex items-center justify-between pt-10 border-t-2 border-gray-50">
+        <a th:href="@{/board}" class="px-8 py-4 bg-gray-100 text-gray-600 font-bold rounded-2xl hover:bg-gray-200 transition-all active:scale-95">
+            목록으로
+        </a>
+
+        <div class="flex items-center space-x-4" th:if="${session.loginMember != null and session.loginMember.id == post.member.id}">
+            <div id="view-btns" class="flex space-x-3">
+                <form th:action="@{/board/{id}/delete(id=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                    <button type="submit" class="px-8 py-4 border-2 border-gray-100 text-gray-400 font-bold rounded-2xl hover:border-red-500 hover:text-red-500 transition-all">
+                        삭제하기
+                    </button>
+                </form>
+                <button type="button" onclick="toggleEditMode()" class="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-lg active:scale-95">
+                    수정하기
+                </button>
+            </div>
+
+            <div id="edit-btns" class="hidden flex space-x-3">
+                <button type="button" onclick="location.reload()" class="px-8 py-4 border-2 border-gray-100 text-gray-400 font-bold rounded-2xl hover:bg-gray-200 transition-all">
+                    취소
+                </button>
+                <button type="submit" form="updateForm" class="px-12 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all active:scale-95">
+                    저장 완료
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleEditMode() {
+        document.getElementById('viewTitle').classList.add('hidden');
+        document.getElementById('editTitle').classList.remove('hidden');
+        document.getElementById('viewContent').classList.add('hidden');
+        document.getElementById('editContent').classList.remove('hidden');
+        document.getElementById('view-btns').classList.add('hidden');
+        document.getElementById('edit-btns').classList.remove('hidden');
+        document.getElementById('editTitle').focus();
+    }
+</script>
+
+</body>
+</html>

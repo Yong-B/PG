@@ -50,7 +50,7 @@
                     <span class="menu-underline"></span>
                 </li>
                 <li class="relative group">
-                    <a href="#" class="hover:text-blue-600 transition-colors">게시판</a>
+                    <a th:href="@{/board}" class="hover:text-blue-600 transition-colors">게시판</a>
                     <span class="menu-underline"></span>
                 </li>
                 <li class="relative group">
@@ -61,10 +61,26 @@
         </nav>
 
         <div class="flex-none flex items-center space-x-8 text-base font-bold text-gray-600">
-            <a th:href="@{/member/add}" class="hover:text-black transition-colors whitespace-nowrap">회원가입</a>
-            <a th:href="@{/login}" class="border-2 border-gray-900 px-7 py-2 rounded-full text-black hover:bg-gray-900 hover:text-white transition-all shadow-sm whitespace-nowrap">
-                로그인
-            </a>
+            <th:block th:if="${session.loginMember == null}">
+                <a th:href="@{/member/add}" class="hover:text-black transition-colors whitespace-nowrap">회원가입</a>
+                <a th:href="@{/login}" class="border-2 border-gray-900 px-7 py-2 rounded-full text-black hover:bg-gray-900 hover:text-white transition-all shadow-sm whitespace-nowrap">
+                    로그인
+                </a>
+            </th:block>
+
+            <th:block th:if="${session.loginMember != null}">
+                <div class="flex items-center space-x-4">
+            <span class="text-black font-black">
+                <span class="text-blue-600" th:text="${session.loginMember.name}">사용자</span>님 환영합니다
+            </span>
+
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="border-2 border-gray-200 px-6 py-2 rounded-full text-gray-500 hover:border-red-500 hover:text-red-500 transition-all whitespace-nowrap">
+                            로그아웃
+                        </button>
+                    </form>
+                </div>
+            </th:block>
         </div>
     </div>
 </header>
