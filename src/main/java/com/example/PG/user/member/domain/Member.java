@@ -35,6 +35,14 @@ public class Member {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Builder.Default
+    @Column(name = "has_game")
+    private Boolean hasGame = false; // 기본값 설정
+
+    public void setHasGame(Boolean hasGame) {
+        this.hasGame = hasGame;
+    }
+
     /** 비밀번호 암호화 로직 */
     public Member encodePassword(PasswordEncoder passwordEncoder) {
         this.password = passwordEncoder.encode(this.password);

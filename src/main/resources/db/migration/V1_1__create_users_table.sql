@@ -4,6 +4,7 @@
     password   VARCHAR(255) NOT NULL,
     name       VARCHAR(100) NOT NULL,
     email      VARCHAR(100) UNIQUE NOT NULL,
+    has_game       BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
