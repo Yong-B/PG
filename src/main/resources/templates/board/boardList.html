@@ -5,78 +5,60 @@
     <title>Wanderin' Free - 게시판</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-        /* 배경색을 연한 회색으로 변경 */
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; overflow-x: hidden; }
-        
-        /* 메뉴 하단 애니메이션 바 */
-        .menu-underline {
-            position: absolute;
-            bottom: -32px;
-            left: 0;
-            width: 0;
-            height: 4px;
-            background-color: #0056ff;
-            transition: all 0.3s ease;
+        /* ✅ 1. 스크롤바 위치 고정 */
+        html {
+            scrollbar-gutter: stable;
         }
-        .group:hover .menu-underline {
-            width: 100%;
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        
+        /* ✅ 2. 통일된 배경색 적용 (#f4f4f5) */
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f4f4f5; color: #333; overflow-x: hidden; }
+        
+        /* 퍼즐 배경 패턴 */
+        .puzzle-overlay {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cpath d='M80 30c-5 0-10-5-10-10s5-10 10-10 10 5 10 10-5 10-10 10zm-30 40c0-5-5-10-10-10s-10 5-10 10 5 10 10 10 10-5 10-10zm90 0c0-5-5-10-10-10s-10 5-10 10 5 10 10 10 10-5 10-10zM80 130c-5 0-10 5-10 10s5 10 10 10 10-5 10-10-5-10-10-10z' fill='%23000' fill-opacity='0.03'/%3E%3C/svg%3E");
+            background-size: 180px;
         }
 
-        /* 테이블 스타일 강화: 라인을 더 선명하게 */
-        .board-table th { border-top: 2px solid #333; border-bottom: 1px solid #ddd; background-color: #fcfcfc; }
-        .board-table td { border-bottom: 1px solid #eee; }
-        .board-table tr:hover { background-color: #f1f5f9; }
+        .menu-underline {
+            position: absolute; bottom: -32px; left: 0; width: 0; height: 4px;
+            background-color: #0056ff; transition: all 0.3s ease;
+        }
+        .group:hover .menu-underline { width: 100%; }
+
+        /* 테이블 행 호버 효과 */
+        .board-row { transition: all 0.2s ease; }
+        .board-row:hover { transform: translateY(-2px); background-color: #f9fbff; }
     </style>
 </head>
 <body>
 
-<header class="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50 shadow-sm">
+<header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <div class="w-full px-12 h-24 flex items-center justify-between">
         <div class="flex-none">
-            <a th:href="@{/}" class="text-3xl font-[900] tracking-tighter text-black hover:text-blue-600 transition-colors whitespace-nowrap">
+            <a th:href="@{/}" class="text-3xl font-[900] tracking-tighter text-black hover:text-blue-600 transition-colors uppercase">
                 WANDERIN' FREE
             </a>
         </div>
-
         <nav class="absolute left-1/2 -translate-x-1/2">
             <ul class="flex space-x-24 font-bold text-xl text-gray-800">
-                <li class="relative group">
-                    <a href="#" class="hover:text-blue-600 transition-colors">소식</a>
-                    <span class="menu-underline"></span>
-                </li>
-                <li class="relative group">
-                    <a href="#" class="hover:text-blue-600 transition-colors">정보</a>
-                    <span class="menu-underline"></span>
-                </li>
-                <li class="relative group">
-                    <a th:href="@{/board}" class="text-blue-600 transition-colors">게시판</a>
-                    <span class="menu-underline" style="width: 100%;"></span>
-                </li>
-                <li class="relative group">
-                    <a href="#" class="hover:text-blue-600 transition-colors">고객지원</a>
-                    <span class="menu-underline"></span>
-                </li>
+                <li class="relative group"><a th:href="@{/news}" class="hover:text-blue-600 transition-colors">소식</a><span class="menu-underline"></span></li>
+                <li class="relative group"><a th:href="@{/info/information}" class="hover:text-blue-600 transition-colors">정보</a><span class="menu-underline"></span></li>
+                <li class="relative group"><a th:href="@{/board}" class="text-blue-600 transition-colors">게시판</a><span class="menu-underline w-full"></span></li>
+                <li class="relative group"><a th:href="@{/support/faq}" class="hover:text-blue-600 transition-colors">고객지원</a><span class="menu-underline"></span></li>
             </ul>
         </nav>
-
         <div class="flex-none flex items-center space-x-8 text-base font-bold text-gray-600">
             <th:block th:if="${session.loginMember == null}">
                 <a th:href="@{/member/add}" class="hover:text-black transition-colors whitespace-nowrap">회원가입</a>
-                <a th:href="@{/login}" class="border-2 border-gray-900 px-7 py-2 rounded-full text-black hover:bg-gray-900 hover:text-white transition-all shadow-sm whitespace-nowrap">
-                    로그인
-                </a>
+                <a th:href="@{/login}" class="border-2 border-gray-900 px-7 py-2 rounded-full text-black hover:bg-gray-900 hover:text-white transition-all shadow-sm whitespace-nowrap">로그인</a>
             </th:block>
-
             <th:block th:if="${session.loginMember != null}">
                 <div class="flex items-center space-x-4">
-                    <span class="text-black font-black">
-                        <span class="text-blue-600" th:text="${session.loginMember.name}">사용자</span>님 환영합니다
-                    </span>
+                    <span class="text-black font-black"><span class="text-blue-600" th:text="${session.loginMember.name}">사용자</span>님 환영합니다</span>
                     <form th:action="@{/logout}" method="post" class="inline">
-                        <button type="submit" class="border-2 border-gray-200 px-6 py-2 rounded-full text-gray-500 hover:border-red-500 hover:text-red-500 transition-all whitespace-nowrap">
-                            로그아웃
-                        </button>
+                        <button type="submit" class="border-2 border-gray-200 px-6 py-2 rounded-full text-gray-500 hover:border-red-500 hover:text-red-500 transition-all whitespace-nowrap">로그아웃</button>
                     </form>
                 </div>
             </th:block>
@@ -84,59 +66,77 @@
     </div>
 </header>
 
-<main class="max-w-[1200px] mx-auto py-16 px-10 my-12 bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100">
-    <div class="mb-12">
-        <h2 class="text-4xl font-black text-gray-900 tracking-tight">자유게시판</h2>
-        <p class="text-gray-500 mt-2 font-medium">유저들과 자유롭게 모험 이야기를 나누는 공간입니다.</p>
+<main class="relative min-h-screen">
+    <div class="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-blue-50 to-transparent">
+        <div class="puzzle-overlay opacity-40"></div>
     </div>
 
-    <div class="flex justify-between items-end mb-6">
-        <div class="text-sm text-gray-500 font-medium">
-            Total <span class="text-black font-bold" th:text="${posts.size()}">0</span>
+    <div class="relative max-w-[1200px] mx-auto py-16 px-6">
+
+        <div class="text-center mb-16">
+            <h2 class="text-6xl font-[900] text-gray-900 tracking-tight mb-6 uppercase">Community</h2>
+            <div class="w-20 h-2 bg-blue-600 mx-auto rounded-full mb-6"></div>
+            <p class="text-xl text-gray-500 font-medium">유저들과 자유롭게 모험 이야기를 나누는 공간입니다.</p>
         </div>
 
-        <a th:if="${session.loginMember != null}"
-           th:href="@{/board/write}"
-           class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95">
-            글쓰기
-        </a>
-    </div>
+        <div class="bg-white rounded-[3rem] shadow-xl shadow-gray-200/50 border border-gray-100 p-8 lg:p-12">
 
-    <table class="w-full board-table text-left border-collapse">
-        <thead>
-        <tr class="text-center h-14 text-gray-800 text-sm tracking-widest">
-            <th class="w-24">NO</th>
-            <th>SUBJECT</th>
-            <th class="w-32">NAME</th>
-            <th class="w-32">DATE</th>
-            <th class="w-24">HIT</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="post : ${posts}" class="h-16 text-center text-gray-600 border-b border-gray-200/60">
-            <td th:text="${post.id}" class="text-sm font-mono text-gray-400">1</td>
-            <td class="text-left px-8">
-                <a th:href="@{/board/{id}(id=${post.id})}" class="text-gray-900 font-bold hover:text-blue-600 transition-colors">
-                    [[${post.title}]]
+            <div class="flex justify-between items-center mb-10 px-4">
+                <div class="text-lg text-gray-400 font-bold">
+                    TOTAL <span class="text-blue-600 font-black ml-1" th:text="${posts.size()}">0</span>
+                </div>
+
+                <a th:if="${session.loginMember != null}"
+                   th:href="@{/board/write}"
+                   class="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95 flex items-center gap-2">
+                    <span class="text-xl">+</span> 새 글 작성하기
                 </a>
-            </td>
-            <td th:text="${post.authorName}" class="font-medium text-gray-700">작성자</td>
-            <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}" class="text-sm text-gray-400">2026-01-16</td>
-            <td th:text="${post.viewCount}" class="text-sm font-mono text-gray-400">0</td>
-        </tr>
+            </div>
 
-        <tr th:if="${posts == null || posts.isEmpty()}" class="h-40">
-            <td colspan="5" class="text-center text-gray-400 font-medium bg-gray-50/50">
-                작성된 게시글이 없습니다. 첫 번째 모험가가 되어보세요!
-            </td>
-        </tr>
-        </tbody>
-    </table>
+            <div class="overflow-hidden rounded-[2rem] border border-gray-100">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="h-16 bg-gray-50/80 text-gray-400 text-xs font-black tracking-[0.2em] text-center border-b border-gray-100">
+                        <th class="w-24">NO</th>
+                        <th>SUBJECT</th>
+                        <th class="w-40">AUTHOR</th>
+                        <th class="w-40">DATE</th>
+                        <th class="w-24">VIEWS</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                    <tr th:each="post : ${posts}" class="board-row h-20 text-center">
+                        <td th:text="${post.id}" class="font-mono text-gray-300 text-sm">1</td>
+                        <td class="text-left px-10">
+                            <a th:href="@{/board/{id}(id=${post.id})}" class="text-gray-900 font-black text-lg hover:text-blue-600 transition-colors block truncate">
+                                [[${post.title}]]
+                            </a>
+                        </td>
+                        <td>
+                            <span class="px-4 py-1.5 bg-gray-50 text-gray-700 rounded-full text-sm font-bold border border-gray-100" th:text="${post.authorName}">작성자</span>
+                        </td>
+                        <td class="text-gray-400 font-medium text-sm" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">2026-01-16</td>
+                        <td class="font-bold text-blue-600/40 text-sm" th:text="${post.viewCount}">0</td>
+                    </tr>
 
-    <div class="flex justify-center mt-16 space-x-1">
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-300 hover:text-blue-600 hover:border-blue-600 transition-all">&laquo;</button>
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-900 text-white font-bold shadow-lg shadow-gray-300">1</button>
-        <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition-colors">&raquo;</button>
+                    <tr th:if="${posts == null || posts.isEmpty()}" class="h-60">
+                        <td colspan="5" class="text-center text-gray-400 font-bold bg-gray-50/30">
+                            <div class="flex flex-col items-center gap-4">
+                                <span class="text-4xl">🏜️</span>
+                                아직 등록된 이야기가 없습니다.
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-center mt-12 space-x-3">
+                <button class="w-12 h-12 flex items-center justify-center rounded-2xl border border-gray-100 text-gray-300 hover:text-blue-600 hover:border-blue-600 transition-all bg-white">&laquo;</button>
+                <button class="w-12 h-12 flex items-center justify-center rounded-2xl bg-blue-600 text-white font-black shadow-lg shadow-blue-100">1</button>
+                <button class="w-12 h-12 flex items-center justify-center rounded-2xl border border-gray-100 text-gray-400 hover:bg-gray-50 transition-colors bg-white">&raquo;</button>
+            </div>
+        </div>
     </div>
 </main>
 

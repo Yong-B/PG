@@ -3,57 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <title th:text="${post.title} + ' - Wanderin\' Free'">상세보기</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        html { scrollbar-gutter: stable; }
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-        /* 배경색을 연한 회색으로 변경 */
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; overflow-x: hidden; }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f4f4f5; color: #333; overflow-x: hidden; }
         
-        /* 메뉴 하단 애니메이션 바 */
-        .menu-underline {
-            position: absolute;
-            bottom: -32px;
-            left: 0;
-            width: 0;
-            height: 4px;
-            background-color: #0056ff;
-            transition: all 0.3s ease;
+        .puzzle-overlay {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cpath d='M80 30c-5 0-10-5-10-10s5-10 10-10 10 5 10 10-5 10-10 10zm-30 40c0-5-5-10-10-10s-10 5-10 10 5 10 10 10 10-5 10-10zm90 0c0-5-5-10-10-10s-10 5-10 10 5 10 10 10 10-5 10-10zM80 130c-5 0-10 5-10 10s5 10 10 10 10-5 10-10-5-10-10-10z' fill='%23000' fill-opacity='0.03'/%3E%3C/svg%3E");
+            background-size: 180px;
         }
-        .group:hover .menu-underline {
-            width: 100%;
-        }
+
+        .menu-underline { position: absolute; bottom: -32px; left: 0; width: 0; height: 4px; background-color: #0056ff; transition: all 0.3s ease; }
+        .group:hover .menu-underline { width: 100%; }
+
         .content-area { line-height: 1.8; min-height: 400px; }
         .hidden { display: none; }
+
+        /* ✅ SweetAlert2 커스텀 스타일 */
+        .swal2-popup {
+            border-radius: 2rem !important;
+            padding: 2rem !important;
+        }
+        .swal2-title {
+            font-weight: 900 !important;
+            color: #111827 !important;
+        }
     </style>
 </head>
 <body>
 
-<header class="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50 shadow-sm">
+<header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <div class="w-full px-12 h-24 flex items-center justify-between">
         <div class="flex-none">
-            <a th:href="@{/}" class="text-3xl font-[900] tracking-tighter text-black hover:text-blue-600 transition-colors whitespace-nowrap">
+            <a th:href="@{/}" class="text-3xl font-[900] tracking-tighter text-black hover:text-blue-600 transition-colors uppercase whitespace-nowrap">
                 WANDERIN' FREE
             </a>
         </div>
 
         <nav class="absolute left-1/2 -translate-x-1/2">
             <ul class="flex space-x-24 font-bold text-xl text-gray-800">
-                <li class="relative group">
-                    <a href="#" class="hover:text-blue-600 transition-colors">소식</a>
-                    <span class="menu-underline"></span>
-                </li>
-                <li class="relative group">
-                    <a href="#" class="hover:text-blue-600 transition-colors">정보</a>
-                    <span class="menu-underline"></span>
-                </li>
-                <li class="relative group">
-                    <a th:href="@{/board}" class="text-blue-600 transition-colors">게시판</a>
-                    <span class="menu-underline" style="width: 100%;"></span>
-                </li>
-                <li class="relative group">
-                    <a href="#" class="hover:text-blue-600 transition-colors">고객지원</a>
-                    <span class="menu-underline"></span>
-                </li>
+                <li class="relative group"><a th:href="@{/news}" class="hover:text-blue-600 transition-colors">소식</a><span class="menu-underline"></span></li>
+                <li class="relative group"><a th:href="@{/info/information}" class="hover:text-blue-600 transition-colors">정보</a><span class="menu-underline"></span></li>
+                <li class="relative group"><a th:href="@{/board}" class="text-blue-600 transition-colors">게시판</a><span class="menu-underline w-full"></span></li>
+                <li class="relative group"><a th:href="@{/support/faq}" class="hover:text-blue-600 transition-colors">고객지원</a><span class="menu-underline"></span></li>
             </ul>
         </nav>
 
@@ -81,66 +76,77 @@
     </div>
 </header>
 
-<main class="max-w-[1000px] mx-auto py-16 px-12 my-12 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
-    <form id="updateForm" th:action="@{/board/{id}/edit(id=${post.id})}" method="post">
+<main class="relative min-h-screen">
+    <div class="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-blue-50 to-transparent">
+        <div class="puzzle-overlay opacity-40"></div>
+    </div>
 
-        <div class="bg-[#fcfcfc] -mx-12 -mt-16 px-12 py-16 rounded-t-[2.5rem] border-b border-gray-100 mb-12">
-            <h2 id="viewTitle" class="text-4xl font-black text-gray-900 leading-tight mb-8" th:text="${post.title}">제목</h2>
+    <div class="relative max-w-[1000px] mx-auto py-16 px-6">
+        <div class="bg-white rounded-[3rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
 
-            <input type="text" id="editTitle" name="title" th:value="${post.title}"
-                   class="hidden w-full text-4xl font-black text-gray-900 border-b-4 border-blue-500 focus:outline-none mb-8 bg-white px-4 py-2 rounded-xl shadow-sm">
-
-            <div class="flex items-center justify-between text-gray-500 font-medium">
-                <div class="flex items-center space-x-6">
-                    <span class="text-black font-[800] text-lg" th:text="${post.authorName}">작성자</span>
-                    <span class="w-px h-4 bg-gray-300"></span>
-                    <span class="text-gray-400" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+            <form id="updateForm" th:action="@{/board/{id}/edit(id=${post.id})}" method="post">
+                <div class="bg-gray-50/50 px-12 py-16 border-b border-gray-100">
+                    <h2 id="viewTitle" class="text-4xl font-black text-gray-900 leading-tight mb-8" th:text="${post.title}">제목</h2>
+                    <input type="text" id="editTitle" name="title" th:value="${post.title}" class="hidden w-full text-4xl font-black text-gray-900 border-b-4 border-blue-500 focus:outline-none mb-8 bg-white px-6 py-4 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between text-gray-500 font-medium">
+                        <div class="flex items-center space-x-6">
+                            <span class="text-black font-black text-lg"><span class="text-blue-600 mr-1">@</span><span th:text="${post.authorName}">작성자</span></span>
+                            <span class="w-px h-4 bg-gray-300"></span>
+                            <span class="text-gray-400 font-bold" th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                        </div>
+                        <div class="bg-white px-5 py-2 rounded-full font-black text-sm border border-gray-200 text-gray-400 shadow-sm">VIEWS <span class="text-blue-600 ml-1" th:text="${post.viewCount}">13</span></div>
+                    </div>
                 </div>
-                <div class="bg-blue-50 text-blue-600 px-5 py-2 rounded-full font-bold text-sm border border-blue-100">
-                    조회수 <span th:text="${post.viewCount}">13</span>
+                <div class="content-area p-12 lg:p-16">
+                    <div id="viewContent" class="text-xl text-gray-700 whitespace-pre-wrap leading-relaxed min-h-[400px]" th:text="${post.content}">내용</div>
+                    <textarea id="editContent" name="content" rows="15" class="hidden w-full text-xl text-gray-800 border-2 border-blue-100 rounded-[2.5rem] p-10 focus:outline-none focus:border-blue-500 bg-[#f9fbff] shadow-inner transition-all" th:text="${post.content}"></textarea>
                 </div>
-            </div>
-        </div>
+            </form>
 
-        <div class="content-area mb-20 px-2">
-            <div id="viewContent" class="text-xl text-gray-800 whitespace-pre-wrap leading-relaxed min-h-[400px]" th:text="${post.content}">내용</div>
+            <div class="flex items-center justify-between px-12 py-10 bg-gray-50/30 border-t border-gray-100">
+                <a th:href="@{/board}" class="px-8 py-4 bg-white text-gray-500 font-bold rounded-2xl border border-gray-200 hover:bg-gray-100 transition-all active:scale-95">목록으로 돌아가기</a>
 
-            <textarea id="editContent" name="content" rows="15"
-                      class="hidden w-full text-xl text-gray-800 border-2 border-blue-100 rounded-[2rem] p-10 focus:outline-none focus:border-blue-500 bg-[#f9fbff] whitespace-pre-wrap shadow-inner"
-                      th:text="${post.content}"></textarea>
-        </div>
-    </form>
-
-    <div class="flex items-center justify-between pt-10 border-t-2 border-gray-50">
-        <a th:href="@{/board}" class="px-8 py-4 bg-gray-100 text-gray-600 font-bold rounded-2xl hover:bg-gray-200 transition-all active:scale-95">
-            목록으로
-        </a>
-
-        <div class="flex items-center space-x-4" th:if="${session.loginMember != null and session.loginMember.id == post.member.id}">
-            <div id="view-btns" class="flex space-x-3">
-                <form th:action="@{/board/{id}/delete(id=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                    <button type="submit" class="px-8 py-4 border-2 border-gray-100 text-gray-400 font-bold rounded-2xl hover:border-red-500 hover:text-red-500 transition-all">
-                        삭제하기
-                    </button>
-                </form>
-                <button type="button" onclick="toggleEditMode()" class="px-10 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-lg active:scale-95">
-                    수정하기
-                </button>
-            </div>
-
-            <div id="edit-btns" class="hidden flex space-x-3">
-                <button type="button" onclick="location.reload()" class="px-8 py-4 border-2 border-gray-100 text-gray-400 font-bold rounded-2xl hover:bg-gray-200 transition-all">
-                    취소
-                </button>
-                <button type="submit" form="updateForm" class="px-12 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all active:scale-95">
-                    저장 완료
-                </button>
+                <div class="flex items-center space-x-4" th:if="${session.loginMember != null and session.loginMember.id == post.member.id}">
+                    <div id="view-btns" class="flex space-x-3">
+                        <form id="deleteForm" th:action="@{/board/{id}/delete(id=${post.id})}" method="post">
+                            <button type="button" onclick="confirmDelete()" class="px-8 py-4 text-gray-400 font-bold rounded-2xl hover:text-red-500 transition-all">삭제</button>
+                        </form>
+                        <button type="button" onclick="toggleEditMode()" class="px-12 py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-lg active:scale-95">글 수정하기</button>
+                    </div>
+                    <div id="edit-btns" class="hidden flex space-x-3">
+                        <button type="button" onclick="location.reload()" class="px-8 py-4 text-gray-400 font-bold rounded-2xl hover:text-gray-900 transition-all">취소</button>
+                        <button type="submit" form="updateForm" class="px-14 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all active:scale-95">수정 완료</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </main>
 
 <script>
+    // ✅ 삭제 확인 커스텀 모달 함수
+    async function confirmDelete() {
+        const result = await Swal.fire({
+            title: '게시글 삭제',
+            text: '정말로 이 이야기를 지우시겠습니까? 삭제된 글은 복구할 수 없습니다.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '삭제하기',
+            cancelButtonText: '취소',
+            confirmButtonColor: '#ef4444', // 삭제는 빨간색 계열
+            cancelButtonColor: '#9ca3af',
+            background: '#FFFBEB', // 메인 결제창과 동일한 배경색
+            customClass: {
+                popup: 'swal2-popup',
+                title: 'swal2-title'
+            }
+        });
+
+        if (result.isConfirmed) {
+            document.getElementById('deleteForm').submit();
+        }
+    }
+
     function toggleEditMode() {
         document.getElementById('viewTitle').classList.add('hidden');
         document.getElementById('editTitle').classList.remove('hidden');

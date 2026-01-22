@@ -5,18 +5,27 @@
     <title>Wanderin' Free - 글쓰기</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* ✅ 1. 스크롤바 위치 고정 */
+        html {
+            scrollbar-gutter: stable;
+        }
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-        /* 배경색을 연한 회색으로 변경 */
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; }
         
-        /* 입력창 포커스 효과 */
+        /* ✅ 2. FAQ와 동일한 배경색 적용 (#f4f4f5) */
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f4f4f5; color: #333; overflow-x: hidden; }
+        
+        /* 메인/FAQ의 퍼즐 패턴 재사용 */
+        .puzzle-overlay {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cpath d='M80 30c-5 0-10-5-10-10s5-10 10-10 10 5 10 10-5 10-10 10zm-30 40c0-5-5-10-10-10s-10 5-10 10 5 10 10 10 10-5 10-10zm90 0c0-5-5-10-10-10s-10 5-10 10 5 10 10 10 10-5 10-10zM80 130c-5 0-10 5-10 10s5 10 10 10 10-5 10-10-5-10-10-10z' fill='%23000' fill-opacity='0.03'/%3E%3C/svg%3E");
+            background-size: 180px;
+        }
+
         .input-focus:focus { outline: none; border-color: #0056ff; box-shadow: 0 0 0 4px rgba(0, 86, 255, 0.1); }
         
-        /* 메뉴 하단 바 */
         .menu-underline { position: absolute; bottom: -32px; left: 0; width: 0; height: 4px; background-color: #0056ff; transition: all 0.3s ease; }
         .group:hover .menu-underline { width: 100%; }
 
-        /* 에러 메시지 애니메이션 */
         .error-shake { animation: shake 0.4s ease-in-out; }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -27,74 +36,80 @@
 </head>
 <body>
 
-<header class="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50 shadow-sm">
+<header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <div class="w-full px-12 h-24 flex items-center justify-between">
         <div class="flex-none">
-            <a th:href="@{/}" class="text-3xl font-[900] tracking-tighter text-black hover:text-blue-600 transition-colors">WANDERIN' FREE</a>
+            <a th:href="@{/}" class="text-3xl font-[900] tracking-tighter text-black hover:text-blue-600 transition-colors uppercase">
+                WANDERIN' FREE
+            </a>
         </div>
         <nav class="absolute left-1/2 -translate-x-1/2">
             <ul class="flex space-x-24 font-bold text-xl text-gray-800">
-                <li class="relative group"><a href="#" class="hover:text-blue-600 transition-colors">소식</a><span class="menu-underline"></span></li>
-                <li class="relative group"><a href="#" class="hover:text-blue-600 transition-colors">정보</a><span class="menu-underline"></span></li>
-                <li class="relative group"><a th:href="@{/board}" class="text-blue-600 transition-colors">게시판</a><span class="menu-underline" style="width: 100%;"></span></li>
-                <li class="relative group"><a href="#" class="hover:text-blue-600 transition-colors">고객지원</a><span class="menu-underline"></span></li>
+                <li class="relative group"><a th:href="@{/news}" class="hover:text-blue-600 transition-colors">소식</a><span class="menu-underline"></span></li>
+                <li class="relative group"><a th:href="@{/info/information}" class="hover:text-blue-600 transition-colors">정보</a><span class="menu-underline"></span></li>
+                <li class="relative group"><a th:href="@{/board}" class="text-blue-600 transition-colors">게시판</a><span class="menu-underline w-full"></span></li>
+                <li class="relative group"><a th:href="@{/support/faq}" class="hover:text-blue-600 transition-colors">고객지원</a><span class="menu-underline"></span></li>
             </ul>
         </nav>
         <div class="flex-none flex items-center space-x-8 text-base font-bold text-gray-600">
-            <div th:if="${session.loginMember != null}" class="flex items-center space-x-4">
-                <span class="text-black font-black"><span class="text-blue-600" th:text="${session.loginMember.name}">사용자</span>님</span>
-                <form th:action="@{/logout}" method="post" class="inline">
-                    <button type="submit" class="text-sm text-gray-400 hover:text-red-500 transition-colors">로그아웃</button>
-                </form>
-            </div>
+            <th:block th:if="${session.loginMember != null}">
+                <div class="flex items-center space-x-4">
+                    <span class="text-black font-black"><span class="text-blue-600" th:text="${session.loginMember.name}">사용자</span>님 환영합니다</span>
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit" class="border-2 border-gray-200 px-6 py-2 rounded-full text-gray-500 hover:border-red-500 hover:text-red-500 transition-all whitespace-nowrap">로그아웃</button>
+                    </form>
+                </div>
+            </th:block>
         </div>
     </div>
 </header>
 
-<main class="max-w-[1000px] mx-auto py-16 px-12 my-12 bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100">
-    <div class="mb-12">
-        <h2 class="text-4xl font-black text-gray-900 tracking-tight">새 글 작성</h2>
-        <p class="text-gray-500 mt-2 font-medium">당신의 모험 이야기를 들려주세요.</p>
-        <div class="w-16 h-1.5 bg-blue-600 mt-6 rounded-full"></div> </div>
+<main class="relative min-h-screen">
+    <div class="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-blue-50 to-transparent">
+        <div class="puzzle-overlay opacity-40"></div>
+    </div>
 
-    <form th:action="@{/board/write}" th:object="${boardWriteDto}" method="post" class="space-y-8">
-
-        <div class="p-10 bg-gray-50/80 rounded-[2rem] border border-gray-100 space-y-8">
-            <div class="space-y-3">
-                <label for="title" class="block text-sm font-bold text-gray-500 uppercase tracking-widest pl-1">Subject</label>
-                <input type="text" id="title" th:field="*{title}"
-                       class="w-full px-8 py-5 bg-white border-2 border-gray-100 rounded-2xl input-focus font-bold text-xl transition-all placeholder:text-gray-300 shadow-sm"
-                       placeholder="제목을 입력해주세요.">
-                <div th:if="${#fields.hasErrors('title')}" class="flex items-center space-x-2 text-red-500 pl-2 error-shake">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    <p th:errors="*{title}" class="text-sm font-bold">제목 에러 문구</p>
-                </div>
+    <div class="relative max-w-[1000px] mx-auto py-16 px-6">
+        <div class="bg-white rounded-[3rem] shadow-xl shadow-gray-200/50 border border-gray-100 p-12 lg:p-16">
+            <div class="mb-12">
+                <h2 class="text-5xl font-black text-gray-900 tracking-tight">새 글 작성</h2>
+                <div class="w-20 h-2 bg-blue-600 mt-6 rounded-full"></div>
+                <p class="text-gray-400 mt-6 text-lg font-medium">Wanderin' Free 모험가들과 소중한 경험을 나눠보세요.</p>
             </div>
 
-            <div class="space-y-3">
-                <label for="content" class="block text-sm font-bold text-gray-500 uppercase tracking-widest pl-1">Content</label>
-                <textarea id="content" th:field="*{content}" rows="15"
-                          class="w-full px-8 py-7 bg-white border-2 border-gray-100 rounded-2xl input-focus text-lg leading-relaxed transition-all resize-none placeholder:text-gray-300 shadow-sm"
-                          placeholder="내용을 자유롭게 작성해주세요."></textarea>
-                <div th:if="${#fields.hasErrors('content')}" class="flex items-center space-x-2 text-red-500 pl-2 error-shake">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    <p th:errors="*{content}" class="text-sm font-bold">내용 에러 문구</p>
-                </div>
-            </div>
-        </div>
+            <form th:action="@{/board/write}" th:object="${boardWriteDto}" method="post" class="space-y-10">
+                <div class="p-8 lg:p-12 bg-gray-50/50 rounded-[2.5rem] border border-gray-100 space-y-10">
+                    <div class="space-y-4">
+                        <label for="title" class="block text-xs font-black text-blue-600 uppercase tracking-[0.2em] pl-1">Subject</label>
+                        <input type="text" id="title" th:field="*{title}"
+                               class="w-full px-8 py-6 bg-white border border-gray-200 rounded-2xl input-focus font-bold text-xl transition-all placeholder:text-gray-300 shadow-sm"
+                               placeholder="제목을 입력해주세요.">
+                        <div th:if="${#fields.hasErrors('title')}" class="flex items-center space-x-2 text-red-500 pl-2 error-shake">
+                            <p th:errors="*{title}" class="text-sm font-bold">제목 에러</p>
+                        </div>
+                    </div>
 
-        <div class="flex items-center justify-end space-x-6 pt-6">
-            <a th:href="@{/board}" class="px-8 py-4 text-gray-400 font-bold hover:text-gray-900 transition-colors">취소하기</a>
-            <button type="submit"
-                    class="px-16 py-5 bg-gray-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-xl hover:shadow-blue-200 active:scale-95">
-                작성 완료
-            </button>
+                    <div class="space-y-4">
+                        <label for="content" class="block text-xs font-black text-blue-600 uppercase tracking-[0.2em] pl-1">Content</label>
+                        <textarea id="content" th:field="*{content}" rows="12"
+                                  class="w-full px-8 py-8 bg-white border border-gray-200 rounded-2xl input-focus text-lg leading-relaxed transition-all resize-none placeholder:text-gray-300 shadow-sm"
+                                  placeholder="내용을 자유롭게 작성해주세요."></textarea>
+                        <div th:if="${#fields.hasErrors('content')}" class="flex items-center space-x-2 text-red-500 pl-2 error-shake">
+                            <p th:errors="*{content}" class="text-sm font-bold">내용 에러</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-6 pt-4">
+                    <a th:href="@{/board}" class="px-8 py-4 text-gray-400 font-bold hover:text-gray-900 transition-colors">취소하기</a>
+                    <button type="submit"
+                            class="px-16 py-6 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95 text-lg">
+                        작성 완료
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </main>
 
 </body>
