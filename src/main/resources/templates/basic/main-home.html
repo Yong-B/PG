@@ -115,15 +115,26 @@
         </div>
     </div>
     <div class="absolute top-0 right-0 z-30 w-72">
-        <div class="bg-white p-3 rounded-bl-2xl shadow-lg flex flex-col items-center border-l border-b border-gray-100">
-            <th:block th:if="${session.loginMember == null}">
-                <button onclick="location.href='/login'" class="play-btn w-full py-6 text-white text-3xl font-[900] rounded-lg mb-2">게임구매</button>
-                <div class="text-[11px] text-gray-400 font-medium">로그인이 필요합니다</div>
-            </th:block>
+        <div class="absolute top-0 right-0 z-30 w-72">
+            <div class="bg-white p-3 rounded-bl-2xl shadow-lg flex flex-col items-center border-l border-b border-gray-100">
 
-            <th:block th:if="${session.loginMember != null}">
-                <button onclick="selectAndPay()" class="play-btn w-full py-6 text-white text-3xl font-[900] rounded-lg mb-2">게임구매</button>
-            </th:block>
+                <th:block th:if="${session.loginMember == null}">
+                    <button onclick="location.href='/login'" class="play-btn w-full py-6 text-white text-3xl font-[900] rounded-lg mb-2">게임구매</button>
+                    <div class="text-[11px] text-gray-400 font-medium">로그인이 필요합니다</div>
+                </th:block>
+
+                <th:block th:if="${session.loginMember != null}">
+                    <th:block th:if="${session.loginMember.hasGame}">
+                        <button onclick="startGame()" class="play-btn w-full py-6 text-white text-3xl font-[900] rounded-lg mb-2">게임실행</button>
+                        <div class="text-[11px] text-blue-500 font-bold">이미 소장 중인 게임입니다</div>
+                    </th:block>
+
+                    <th:block th:unless="${session.loginMember.hasGame}">
+                        <button onclick="selectAndPay()" class="play-btn w-full py-6 text-white text-3xl font-[900] rounded-lg mb-2">게임구매</button>
+                    </th:block>
+                </th:block>
+
+            </div>
         </div>
     </div>
     <div class="relative z-20 ml-60 pointer-events-none">
@@ -218,8 +229,8 @@
                         <span class="text-lg font-mono text-gray-400">01:45</span>
                     </div>
                     <div class="pt-4 space-y-3 text-gray-600">
-                        <div class="flex justify-between text-sm px-4"><span>4. 박</span><span>02:35</span></div>
-                        <div class="flex justify-between text-[#B45309] px-4 text-lg mt-6 font-black"><span>10. 종</span><span>04:20</span></div>
+                        <div class="flex justify-between text-sm px-4"><span>4. 소원</span><span>02:35</span></div>
+                        <div class="flex justify-between text-[#B45309] px-4 text-lg mt-6 font-black"><span>10. 바다</span><span>04:20</span></div>
                     </div>
                 </div>
             </div>
@@ -227,6 +238,22 @@
     </div>
 </section>
 <script th:inline="javascript">
+    function startGame() {
+    Swal.fire({
+        title: '게임 실행',
+        text: 'Wanderin\' Free를 실행하시겠습니까?',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: '실행',
+        cancelButtonText: '취소',
+        confirmButtonColor: '#0072ff'
+        }).then((result) => {
+        if (result.isConfirmed) {
+            // 여기에 실제 게임 실행 로직이나 다운로드 링크 연결
+            Swal.fire('실행 중...', '게임이 곧 시작됩니다!', 'success');
+            }
+        });
+    }
     async function selectAndPay() {
         const { value: pg } = await Swal.fire({
             title: '결제 수단 선택',
@@ -249,7 +276,7 @@
     }
 
     function requestPay(pgId) {
-        const IMP = window.IMP;b 
+        const IMP = window.IMP;
         IMP.init("imp78358032");
         const memberName = [[${session.loginMember?.name}]] || '회원';
         const memberEmail = [[${session.loginMember?.email}]] || 'email@example.com';

@@ -1,6 +1,7 @@
 package com.example.PG.news.controller;
 
 import com.example.PG.news.notice.domain.Notice;
+import com.example.PG.news.notice.domain.dto.NoticeCacheDto;
 import com.example.PG.news.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -19,7 +20,8 @@ public class NewsController {
 
     @GetMapping("/notice")
     public String notice(Model model) {
-        List<Notice> notices = noticeService.findNotices();
+       // List<Notice> notices = noticeService.findNotices(); // DB 조회 로직
+        List<NoticeCacheDto> notices = noticeService.findNotices();
 
         // 2. notice.html로 데이터 전달
         model.addAttribute("notices", notices);

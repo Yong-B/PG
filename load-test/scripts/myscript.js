@@ -15,7 +15,7 @@ export const options = {
 
 export default function () {
   // 본인의 AWS IP와 공지사항 조회 엔드포인트로 수정하세요.
-  const url = 'http://YOUR_AWS_EC2_IP:8080/api/notices'; 
+  const url = 'http://3.34.126.119:8080/api/notices'; 
   const res = http.get(url);
 
   check(res, {
