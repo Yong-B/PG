@@ -88,20 +88,18 @@ public class NoticeService {
         return noticeRepository.save(notice).getId();
     }
 
+    // 1. 기존에 getCachedNoticeDto에 있던 캐시 설정을 이쪽(정문)으로 옮깁니다.
     @Transactional
+    @Cacheable(value = "noticeDetail", key = "#id")
     public NoticeCacheDto getNoticeDetailWithCache(Long id) {
-        // 1. 조회수 증가는 매번 실행 (DB 반영)
+
+        // 캐시가 없을 때만 아래 로직이 실행됩니다.
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
-        notice.addViewCount();
 
-        // 2. 캐시된 데이터를 가져오거나 없으면 새로 저장하는 내부 메서드 호출
-        return getCachedNoticeDto(id, notice);
-    }
+        notice.addViewCount(); // 조회수 증가
 
-    // self-invocation 방지를 위해 호출 구조에 유의하거나 public으로 분리
-    @Cacheable(value = "noticeDetail", key = "#id")
-    public NoticeCacheDto getCachedNoticeDto(Long id, Notice notice) {
+        // 2. 변환 로직은 메서드를 호출하지 않고 바로 처리하거나, 단순 메서드로 호출합니다.
         return NoticeCacheDto.fromEntity(notice);
     }
 
