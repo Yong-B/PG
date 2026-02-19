@@ -1,15 +1,9 @@
 package com.example.PG.purchase.controller;
-
+import com.example.PG.purchase.service.OrderService;
 import com.example.PG.user.member.domain.Member;
-import com.example.PG.user.member.repository.MemberRepository;
-import com.siot.IamportRestClient.IamportClient;
-import com.siot.IamportRestClient.response.IamportResponse;
-import com.siot.IamportRestClient.response.Payment;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-
+import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -25,49 +19,54 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final MemberRepository memberRepository;
-    private IamportClient iamportClient;
-
-    @Value("${iamport.api-key}")
-    private String apiKey;
-
-    @Value("${iamport.api-secret}")
-    private String secretKey;
-
-    @PostConstruct
-    public void init() {
-        this.iamportClient = new IamportClient(apiKey, secretKey);
-    }
+    private final OrderService orderService;
 
     @PostMapping("/payment/validation/{imp_uid}")
     @ResponseBody
     public ResponseEntity<String> validateIamport(
             @PathVariable String imp_uid,
-            @RequestBody Map<String, Object> paymentData,
+            @RequestBody Map<String, String> paymentData,
             HttpSession session) {
-        try {
-            // 아임포트 결제 정보 조회
-            IamportResponse<Payment> payment = iamportClient.paymentByImpUid(imp_uid);
 
-            // 세션에서 로그인 유저 가져오기
-            Member loginMember = (Member) session.getAttribute("loginMember");
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        String merchantUid = paymentData.get("merchant_uid");
 
-            if (loginMember != null && "paid".equals(payment.getResponse().getStatus())) {
-                // 2. 핵심: 유저 상태 변경 및 DB 저장
-                loginMember.setHasGame(true);
-                memberRepository.save(loginMember); // 여기서 실제 DB의 has_game이 true로 바뀜!
-
-                // 3. 세션 정보도 최신화 (안 하면 로그아웃 전까지 화면 안 바뀜)
-                session.setAttribute("loginMember", loginMember);
-
-                log.info("유저 {} 결제 완료 및 DB 업데이트 성공", loginMember.getLoginId());
-                return ResponseEntity.ok("success");
-            }
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("검증 실패");
-        } catch (Exception e) {
-            log.error("결제 검증 오류: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("error");
+        if (loginMember == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("unauthorized");
         }
+
+        try {
+            // 서비스 호출
+            orderService.validateAndCompletePayment(imp_uid, merchantUid, loginMember.getId());
+
+            // 세션 갱신 (화면 반영용)
+            loginMember.setHasGame(true);
+            session.setAttribute("loginMember", loginMember);
+
+            return ResponseEntity.ok("success");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    
+    @PostMapping("/payment/prepare")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> preparePayment(HttpSession session) {
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if (loginMember == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        // 서버에서 가격 결정 (하드코딩을 하더라도 서버 코드에 있어야 안전함)
+        int fixedPrice = 30000;
+        String merchantUid = "wanderin_" + System.currentTimeMillis();
+
+        // DB에 READY 상태로 주문 저장
+        orderService.createOrder(merchantUid, fixedPrice, loginMember.getId());
+
+        // 클라이언트에 주문 정보 전달
+        Map<String, Object> response = new HashMap<>();
+        response.put("merchant_uid", merchantUid);
+        response.put("amount", fixedPrice);
+
+        return ResponseEntity.ok(response);
     }
 }
